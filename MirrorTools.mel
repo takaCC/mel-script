@@ -1,0 +1,147 @@
+global string $returnNodeCtx_return[];
+global proc MirrorPosition(string $sel[])
+{
+    //変数の初期化
+    string $PivotPointData[];
+    string $MirrorPointData[];
+    string $PivotPoint;
+    string $MirrorPoint;
+    string $Cnst1[];
+    string $Cnst2[];
+    string $Cnst3[];
+    string $Cnst4[];
+    string $MirrorConst[];
+    global string $returnNodeCtx_return[];
+
+    $PivotPointData = `spaceLocator -n "middlePoint"`;
+    $MirrorPointData = `spaceLocator -n "MirrorPoint"`;
+    $PivotPoint = $PivotPointData[0];
+    $MirrorPoint = $MirrorPointData[0];
+
+    //ピボットポイントを配置する
+
+    if(`menuItem -q -checkBox MirrorPosition_Pivot_MiddlePoint_PopUpMenu`)
+    {
+
+        $Cnst1 = `pointConstraint -weight 1 $sel[0] $PivotPoint`;
+        $Cnst2 = `pointConstraint -weight 1 $sel[1] $PivotPoint`;
+	$Cnst3 = `aimConstraint $sel[0] $PivotPoint`;
+        
+    }
+
+    else if(`menuItem -q -checkBox MirrorPosition_Pivot_SelectPosition_PopUpMenu`)
+    {
+
+        if(`size $sel`<4)
+        {
+            $Cnst1 = `parentConstraint -weight 1 $sel[2] $PivotPoint`;
+        }
+        
+    }
+
+    //ミラーリングポイントの配置
+
+    $Cnst4 = `parentConstraint -weight 1 $sel[0] $MirrorPoint`;    
+
+    //コンストレインの削除、各種ロケータの整理
+
+    delete $Cnst1 $Cnst2 $Cnst3 $Cnst4;
+    parent $MirrorPoint $PivotPoint;
+    select $PivotPoint;
+
+    //ミラーリングを行う
+    if(`menuItem -q -checkBox MirrorPosition_Mode_X_Plane_PopUpMenu`) setAttr ($PivotPoint+".scaleX") -1;
+    if(`menuItem -q -checkBox MirrorPosition_Mode_Y_Plane_PopUpMenu`) setAttr ($PivotPoint+".scaleY") -1;
+    if(`menuItem -q -checkBox MirrorPosition_Mode_Z_Plane_PopUpMenu`) setAttr ($PivotPoint+".scaleZ") -1;
+
+    parent -w $MirrorPoint;
+    
+
+    //invertRotが有効な場合、処理を実行する
+    if(`menuItem -q -checkBox MirrorPosition_invertRot_On_PopUpMenu`)
+    {
+	select $MirrorPoint;
+	
+	if(`menuItem -q -checkBox MirrorPosition_invertRot_Plus_PopUpMenu`)
+	{
+		if(`menuItem -q -checkBox MirrorPosition_invertRot_rotX_PopUpMenu`)
+		{
+        		rotate -r -os 180 0 0 ;
+		}
+
+		if(`menuItem -q -checkBox MirrorPosition_invertRot_rotY_PopUpMenu`)
+		{
+	        	rotate -r -os 0 180 0 ;
+		}
+
+		if(`menuItem -q -checkBox MirrorPosition_invertRot_rotZ_PopUpMenu`)
+		{
+        		rotate -r -os 0 0 180 ;
+		}
+	}
+
+	else if(`menuItem -q -checkBox MirrorPosition_invertRot_Minus_PopUpMenu`)
+	{
+		if(`menuItem -q -checkBox MirrorPosition_invertRot_rotX_PopUpMenu`)
+		{
+        		rotate -r -os -180 0 0 ;
+		}
+
+		if(`menuItem -q -checkBox MirrorPosition_invertRot_rotY_PopUpMenu`)
+		{
+	        	rotate -r -os 0 -180 0 ;
+		}
+
+		if(`menuItem -q -checkBox MirrorPosition_invertRot_rotZ_PopUpMenu`)
+		{
+        		rotate -r -os 0 0 -180 ;
+		}
+	}
+
+       	select -cl;
+    }
+
+    //2番目に選択したノードをミラーリング位置とマッチさせる
+    if(`menuItem -q -checkBox MirrorPosition_Cnst_Parent_PopUpMenu`)
+    {
+        $MirrorConst = `parentConstraint $MirrorPoint $sel[1]`;
+
+        //keyframeが入っている場合に対応するため、キーを打つ
+        select $sel[1];
+        setKeyframe;
+        select -cl;
+        
+        delete $MirrorConst;
+    }
+
+    if(`menuItem -q -checkBox MirrorPosition_Cnst_Point_PopUpMenu`)
+    {
+        $MirrorConst = `pointConstraint $MirrorPoint $sel[1]`;
+
+        //keyframeが入っている場合に対応するため、キーを打つ
+        select $sel[1];
+        setKeyframe;
+        select -cl;
+        
+        delete $MirrorConst;
+    }
+
+    if(`menuItem -q -checkBox MirrorPosition_Cnst_Orient_PopUpMenu`)
+    {
+        $MirrorConst = `orientConstraint $MirrorPoint $sel[1]`;
+
+        //keyframeが入っている場合に対応するため、キーを打つ
+        select $sel[1];
+        setKeyframe;
+        select -cl;
+        
+        delete $MirrorConst;
+    }
+
+    delete $MirrorPoint $PivotPoint;
+
+    select $sel[1];
+
+    //Gキーに処理を登録
+    //repeatLast -ac "MirrorPosition(`ls -sl`)";
+}
