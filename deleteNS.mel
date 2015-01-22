@@ -1,0 +1,83 @@
+//ネームスペースを削除するツール
+
+//グローバル変数を定義
+global string $NSdeleteUIListCtrl;
+global string $NSdeleteUIwindow;
+
+
+//UIを開く
+NSdeleteUI();
+
+
+//ネームスペース削除処理を行うプロシージャを定義
+global proc NSdeleteProc(string $NSName[])
+{
+	for($work in $NSName)
+		{
+			if(catch(`namespace -f -mv $work ":"`)) warning ($work+" はたぶん使用中だからこいつぁ削除できないぜ！");
+			if(catch(`namespace -f -rm $work`)) warning ($work+" はたぶん使用中だからこいつぁ削除できないぜ！");
+		}
+}
+
+//UIを構築するプロシージャを定義
+global proc NSdeleteUI()
+{
+
+//グローバル変数を定義(なぜかプロシージャ内でも定義してやらないといけない･･･)
+global string $NSdeleteUIListCtrl;
+global string $NSdeleteUIwindow;
+
+//for文で使用する$work変数を定義
+string $work;
+
+//ネームスペースの一覧を取得
+string $NSList[] = `namespaceInfo -lon`;
+
+//ここからUI構築
+$NSdeleteUIwindow = `window -t "NS delete"`;
+	string $form = `formLayout`;
+
+		//iconTextScrollListを作成
+		$NSdeleteUIListCtrl = `iconTextScrollList -allowMultiSelection true`;
+
+		//ネームスペース一覧を総当りでリストに表示
+		for($work in `namespaceInfo -lon`)
+			{
+				//"UI"ネームスペースを無視(mayaで必要なネームスペース？これを削除するとMayaのUIが壊れる)
+				if($work != "UI")
+				{
+					//"shared"ネームスペースを無視(なぜか||の論理演算子は使えなかった･･･)
+					if($work != "shared")
+						{
+							//リストにネームスペースを追加
+							iconTextScrollList -e -append $work $NSdeleteUIListCtrl;
+						}
+				}
+			}
+	//ネームスペースを再度取得→ウィンドウの再構築を定義
+	string $refreshButton = `button -l "refresh" -c "deleteUI $NSdeleteUIwindow;NSdeleteUI()"`;
+	
+	//ネームスペースを削除→ウィンドウを再構築を定義
+	string $closeButton = `button -l "delete" -c "NSdeleteProc(`iconTextScrollList -q -si $NSdeleteUIListCtrl`);deleteUI $NSdeleteUIwindow;NSdeleteUI()"`;
+
+	//formLayout内のボタンなどの配置を編集
+	formLayout -e
+		-attachNone $closeButton "top"
+		-attachControl $closeButton "left" 5 $refreshButton
+		-attachForm $closeButton "bottom" 5
+		-attachForm $closeButton "right" 5
+
+		-attachNone $refreshButton "top"
+		-attachForm $refreshButton "left" 5
+		-attachForm $refreshButton "bottom" 5
+		-attachPosition $refreshButton "right" 5 50
+
+		-attachForm $NSdeleteUIListCtrl "top" 5
+		-attachForm $NSdeleteUIListCtrl "left" 5
+		-attachControl $NSdeleteUIListCtrl "bottom" 5 $closeButton
+		-attachForm $NSdeleteUIListCtrl "right" 5
+	$form;
+
+//ウィンドを表示
+showWindow;
+}
