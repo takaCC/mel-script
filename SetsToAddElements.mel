@@ -1,0 +1,28 @@
+global proc SetsToAddElements(string $sel[])
+{
+
+$sel = `ls -sl`;
+$size = `size $sel`;
+
+int $shift = 1;
+int $ctrl = 4;
+int $ShiftCtrl = 5;
+int $mods = `getModifiers`;
+
+if (!$mods)
+	{
+	for($i=0;$i<$size-1;$i++)
+		{
+			sets -e -add $sel[($size-1)] $sel[$i];
+		}
+	}
+
+if ($mods == $ctrl)
+	{
+	for($i=0;$i<$size-1;$i++)
+		{
+			sets -e -rm $sel[($size-1)] $sel[$i];
+		}
+	}
+
+}
