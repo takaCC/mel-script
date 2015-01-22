@@ -1,0 +1,20 @@
+global proc createKeyFrameAngleEdittor()
+{
+$ParentLayout = `toolButton -q -p regionSelectKeyTool`;
+$ctrl = `floatFieldGrp -p $ParentLayout -numberOfFields 1 -changeCommand "" hoge`;
+floatFieldGrp -e -changeCommand ("EditAnimCurveTangentAngel(`floatFieldGrp -q -v1 "+$ctrl+"`);") $ctrl;
+$deleteButton = `button -p $ParentLayout -c ""`;
+button -e -c ("deleteUI "+$ctrl+";"+"deleteUI "+$deleteButton+";") -l "deleteAngeleEdit" $deleteButton;
+};
+
+global proc EditAnimCurveTangentAngel(float $AngleValue)
+{
+for($CurveName in `keyframe -q -name`)
+    {
+    //選択しているタンジェントの取得
+        for($selectFrame in `keyframe -q -sl -tc`)
+        {
+            keyTangent -e -a -t $selectFrame -outAngle $AngleValue $CurveName;
+        }
+    }
+}
