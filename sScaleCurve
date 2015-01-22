@@ -1,0 +1,34 @@
+global proc sScaleCurve()
+{
+
+$XValue = `floatField -q -value scaleXValue`;
+$YValue = `floatField -q -value scaleYValue`;
+$PivotValue = `floatField -q -value pivotValue`;
+
+	if(`checkBox -q -v selectCurvePointOnly`)
+	{
+		if(`checkBox -q -v divisionMode`)
+		{
+			$XValue = 1/$XValue;
+			$YValue = 1/$YValue;
+			scaleKey -ts $XValue -tp $PivotValue -vs $YValue -vp $PivotValue -animation keys;
+		}
+		else
+		{
+			scaleKey -ts $XValue -tp $PivotValue -vs $YValue -vp $PivotValue -animation keys;
+		}
+	}
+	else
+	{
+		if(`checkBox -q -v divisionMode`)
+		{
+			$XValue = 1/$XValue;
+			$YValue = 1/$YValue;
+			scaleKey -ts $XValue -tp $PivotValue -vs $YValue -vp $PivotValue;
+		}
+		else
+		{
+			scaleKey -ts $XValue -tp $PivotValue -vs $YValue -vp $PivotValue;
+		}
+	}
+}
