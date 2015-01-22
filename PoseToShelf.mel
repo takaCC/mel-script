@@ -1,0 +1,15 @@
+global proc PoseToShelf( string $SelectList[])
+{
+float $AttrValue;
+string $AttrCmd = "scriptToShelf \"Pose\" \"";
+for($work in $SelectList)
+	{
+		for($Attr in `listAttr -k -u -se $work`)
+			{
+				$AttrValue = `getAttr ($work+"."+$Attr)`;
+				$AttrCmd += ("catch(`setAttr \\\""+$work+"."+$Attr+"\\\" "+$AttrValue+"`);\\r");
+			}
+	}
+$AttrCmd += "\" \"1\";";
+eval ($AttrCmd);
+}
