@@ -1,0 +1,191 @@
+{
+if(`window -ex "AnimToolSet_Window"`) deleteUI "AnimToolSet_Window";
+window -rtf 1 "AnimToolSet_Window";
+scrollLayout -cr 1;
+columnLayout -adjustableColumn true;
+//-----------------------------------------------------------------------------------------------------------------------------------
+$frameLayout2 = `frameLayout -cll 1 -label "shelfToWindow" -labelAlign "top" "selfToWindow_FrameLayout"`;
+shelfToWindow($gShelfTopLevel);
+setParent ..;
+setParent ..;
+//-----------------------------------------------------------------------------------------------------------------------------------
+createOutlinerPanel();
+setParent ..;
+setParent ..;
+//-----------------------------------------------------------------------------------------------------------------------------------
+$frameLayout3 = `frameLayout -cll 1 -cl 1 -label "toggleImagePlane" -labelAlign "top"`;
+scrollLayout -cr 1 -h 200;
+columnLayout;
+gridLayout -cw 200 -ch 70 -nc 2;
+text -l "ImagePlaneName";
+scrollLayout;
+//textField -tx "imagePlaneShape2" "ImagePlaneName_Field";
+textScrollList "ImagePlaneName_List";
+string $imgPlane[] = `ls -type "imagePlane"`;
+for($work in $imgPlane)
+{
+    textScrollList -e -append $work "ImagePlaneName_List";
+}
+if(`size $imgPlane`)
+{
+	textScrollList -e -si $imgPlane[0] "ImagePlaneName_List";
+}
+setParent ..;
+setParent ..;
+//下の段のレイアウトは別途調整している
+gridLayout -cw 200 -nc 2;
+text -l "opacity";
+floatField -v 1 "toggleImgPlane_Opacity";
+text -l "opacity_slider";
+floatSlider -min 0 -max 1 -dc "ImgPlane_OpacitySlider(`floatSlider -q -v \"opacitySlider\"`,`textScrollList -q -si \"ImagePlaneName_List\"`);floatField -e -v `floatSlider -q -v \"opacitySlider\"` \"toggleImgPlane_Opacity\"" "opacitySlider";
+setParent ..;
+button -w 400 -c "toggle_ImgPlane(`floatField -q -v \"toggleImgPlane_Opacity\"`,`textScrollList -q -si \"ImagePlaneName_List\"`);" -l "Toggle";
+button -w 400 -l "refresh image Plane" -c "refreshImgPlaneList()";
+setParent ..;
+setParent ..;
+//-----------------------------------------------------------------------------------------------------------------------------------
+if(`dockControl -ex "myDockControl"`) deleteUI "myDockControl";
+dockControl -area "left" -w 450
+        -content "AnimToolSet_Window"
+        -allowedArea "left"
+        -allowedArea "right" "myDockControl";
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------
+
+global proc shelfToWindow(string $shelf)
+{
+if(`columnLayout -ex "selfToWindow_ColumnLayout"`)
+{
+deleteUI "selfToWindow_ColumnLayout";
+}
+columnLayout -p "selfToWindow_FrameLayout" "selfToWindow_ColumnLayout";
+//shelf保存
+saveAllShelves $shelf;
+//shlef読み込み
+string $shelfPath = `internalVar -userShelfDir`;
+string $shelfs[] = `getFileList -folder $shelfPath`;
+string $shelfName;
+for($shelfName in $shelfs)
+    {
+        eval("source \""+$shelfPath+$shelfName+"\"");
+    }
+
+text "Windowを作製したいshelfの名前を選択し、\nCreateボタンを実行してください";
+paneLayout;
+iconTextScrollList -ams 1 "origShelfWindow_List";
+setParent ..;
+button -w 100 -c "SaveLoadShlef($gShelfTopLevel);crOrigShelfWindow(`iconTextScrollList -q -si \"origShelfWindow_List\"`);" -l "create";
+button -w 100 -c "shelfToWindow($gShelfTopLevel)" -l "reflesh";
+for($work in `tabLayout -q -ca $shelf`)
+    {
+        iconTextScrollList -e -append $work "origShelfWindow_List";
+    }
+//iconTextScrollList -e -dcc "crOrigShelfWindow(`iconTextScrollList -q -si \"origShelfWindow_List\"`)" "origShelfWindow_List";
+//シェルフの一覧を返す
+//print `tabLayout -q -ca $gShelfTopLevel`;
+//UIの種類を返す
+//objectTypeUI $gShelfTopLevel;
+}
+
+
+//shlefWindow作成用プロシージャ
+global proc crOrigShelfWindow(string $shelfName[])
+{
+for($work in $shelfName)
+    {
+        if(`frameLayout -q -ex ($work+"_Shelf")`) deleteUI ($work+"_Shelf");
+        columnLayout;
+        frameLayout -p "AnimToolSet_Window" -cll 1 -label $work ($work+"_Shelf");
+        scrollLayout -cr 1;
+        gridLayout -cwh 35 35 -cr 5;
+        eval("shelf_"+$work+"()");
+        setParent ..;
+        setParent ..;
+        //button -c ("deleteUI "+$shelfName[0]+"_Shelf;"+"deleteUI "+$shelfName[0]+"_Shelf_DeleteButton;") -l ("delete  "+$shelfName[0]+"_Shelf") ($shelfName[0]+"_Shelf_DeleteButton");
+        button -c ("deleteUI "+$work+"_Shelf;") -l ("delete  "+$work+"_Shelf") ($work+"_Shelf_DeleteButton");
+    }
+}
+
+//shelfのセーブとロード用プロシージャ
+global proc SaveLoadShlef(string $shlefs)
+{
+//shelf保存
+saveAllShelves $shlefs;
+//shlef読み込み
+string $shelfPath = `internalVar -userShelfDir`;
+string $shelfs[] = `getFileList -folder $shelfPath`;
+string $shelfName;
+for($shelfName in $shelfs)
+    {
+        eval("source \""+$shelfPath+$shelfName+"\"");
+    }
+}
+
+
+
+global proc toggle_ImgPlane(float $opacity,string $imgName[])
+{
+    if(`getAttr ($imgName[0]+".alphaGain")`>0) setAttr ($imgName[0]+".alphaGain") 0;
+    else setAttr ($imgName[0]+".alphaGain") $opacity;
+    //repeatLast -ac ("toggle_ImgPlane("+$opacity+",\""+$imgName[0]+"\")");
+}
+global proc ImgPlane_OpacitySlider(float $value,string $imgName[])
+{
+    setAttr ($imgName[0]+".alphaGain") $value;
+}
+
+global proc refreshImgPlaneList()
+{
+    textScrollList -e -ra "ImagePlaneName_List";
+    for($work in `ls -type "imagePlane"`)
+    {
+        textScrollList -e -append $work "ImagePlaneName_List";
+    }
+}
+
+global proc createOutlinerPanel()
+{
+frameLayout -cl 1 -labelVisible 1 -cll 1 -ec "frameLayout -e -h 350 \"AsetOriginalOutliner\";" -cc "frameLayout -e -h 21 \"AsetOriginalOutliner\";" -l "outliner" "AsetOriginalOutliner";
+//frameLayout -labelVisible 1 -cll 1 -l "outliner" "AsetOriginalOutliner";
+string $panel = `outlinerPanel`;
+string $outliner = `outlinerPanel -query -outlinerEditor $panel`;
+outlinerEditor -edit
+    -mainListConnection "worldList"
+    -selectionConnection "modelList"
+    -showShapes false
+    -showAttributes false
+    -showConnected false
+    -showAnimCurvesOnly false
+    -autoExpand false
+    -showDagOnly true
+    -ignoreDagHierarchy false
+    -expandConnections false
+    -showCompounds true
+    -showNumericAttrsOnly false
+    -highlightActive true
+    -autoSelectNewObjects false
+    -doNotSelectNewObjects false
+    -transmitFilters false
+    -showSetMembers true
+    -setFilter defaultSetFilter
+    $outliner;
+}
